@@ -34,8 +34,15 @@ app.use(cors({
 }));
 
 app.use(cookieParser())
-// Rutas
-app.use('/api', contactRoutes, authRoutes);
+
+// Rutas - Registrar cada router por separado
+app.use('/api', contactRoutes);
+app.use('/api', authRoutes);
+
+// Ruta de prueba para verificar que el servidor funciona
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Backend funcionando correctamente' });
+});
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
