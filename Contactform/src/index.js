@@ -10,22 +10,26 @@ const PORT = process.env.PORT || 3000;
 // Middleware para parsear JSON
 app.use(express.json());
 
+// Middleware de logging (temporal para debug)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`, {
+    origin: req.headers.origin,
+    userAgent: req.headers['user-agent'],
+    body: req.body
+  });
+  next();
+});
+
 // Middleware para habilitar CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : ['http://localhost:5173', 'http://localhost:3000'];
 
+console.log('Allowed origins:', allowedOrigins);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (como aplicaciones móviles o Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Permite cualquier origen temporalmente
   credentials: true,
 }));
 
