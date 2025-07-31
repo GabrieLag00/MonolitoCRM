@@ -79,15 +79,15 @@ const authController = {
 
    res.cookie("jwt", accessToken, {
     httpOnly: true,
-    secure: true,             // Usa HTTPS
-    sameSite: "None",         // Permite intercambio entre dominios
+    secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true", // Solo HTTPS en producción con HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Más permisivo en desarrollo
     maxAge: 3600000
   });
 
   res.cookie("refreshJwt", refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     maxAge: 7 * 24 * 3600000
   });
 
@@ -140,8 +140,8 @@ const authController = {
 
     res.cookie("jwt", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 3600000,
     });
 
