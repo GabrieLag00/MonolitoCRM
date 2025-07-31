@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  backend:
+    build: 
+      context: ./Contactform
+      target: production  # Modo producción
+    container_name: contact-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3025
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "3025:3025"
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./FrontContactForm
+      target: production  # Modo producción con Nginx
+    container_name: contact-frontend
+    environment:
+      - NODE_ENV=production
+      - VITE_URL_API=http://159.203.136.17:3025  # URL de tu VPS
+      - VITE_EMAILJS_SERVICE_ID=${VITE_EMAILJS_SERVICE_ID}
+      - VITE_EMAILJS_TEMPLATE_ID=${VITE_EMAILJS_TEMPLATE_ID}
+      - VITE_EMAILJS_PUBLIC_KEY=${VITE_EMAILJS_PUBLIC_KEY}
+      - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
+    ports:
+      - "80:80"  # Puerto 80 para acceso web
+    depends_on:
+      - backend
+    networks:
+      - contact-network
+    restart: unless-stopped
+
+networks:
+  contact-network:
+    driver: bridge
