@@ -3,6 +3,7 @@ import contactRoutes from './routes/contactRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { cookieConfig } from './middlewares/cookieMiddleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,16 +34,10 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(cookieParser())
-
-// Rutas - Registrar cada router por separado
-app.use('/api', contactRoutes);
-app.use('/api', authRoutes);
-
-// Ruta de prueba para verificar que el servidor funciona
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend funcionando correctamente' });
-});
+app.use(cookieParser());
+app.use(cookieConfig); // Middleware para configurar cookies correctamente
+// Rutas
+app.use('/api', contactRoutes, authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

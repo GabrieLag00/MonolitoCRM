@@ -77,19 +77,14 @@ const authController = {
 
     await Usuario.update({ refreshToken }, { where: { id: usuario.id } });
 
-   res.cookie("jwt", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true", // Solo HTTPS en producción con HTTPS
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // Más permisivo en desarrollo
-    maxAge: 3600000
-  });
+    // Usar el método helper para configurar cookies
+    res.setCookieSecure("jwt", accessToken, {
+      maxAge: 3600000 // 1 hora
+    });
 
-  res.cookie("refreshJwt", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    maxAge: 7 * 24 * 3600000
-  });
+    res.setCookieSecure("refreshJwt", refreshToken, {
+      maxAge: 7 * 24 * 3600000 // 7 días
+    });
 
     return res.status(200).json({
       data: { message: "Login exitoso", accessToken, refreshToken },
@@ -138,11 +133,9 @@ const authController = {
       { expiresIn: "1h" }
     );
 
-    res.cookie("jwt", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production" && process.env.USE_HTTPS === "true",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      maxAge: 3600000,
+    // Usar el método helper para configurar cookies
+    res.setCookieSecure("jwt", newAccessToken, {
+      maxAge: 3600000 // 1 hora
     });
 
     return res.status(200).json({
@@ -158,6 +151,37 @@ const authController = {
     });
   }
 },
+
+  async logout(req, res) {
+    try {
+      // Limpiar las cookies
+      res.clearCookie("jwt", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        path: "/"
+      });
+      
+      res.clearCookie("refreshJwt", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        path: "/"
+      });
+
+      return res.status(200).json({
+        data: { message: "Logout exitoso" },
+        status: 200,
+        message: "Sesión cerrada correctamente",
+      });
+    } catch (error) {
+      console.error("Error en logout:", error);
+      return res.status(500).json({
+        error: "Error al cerrar sesión",
+        details: error.message,
+      });
+    }
+  },
 
   async register(req, res) {
     try {
