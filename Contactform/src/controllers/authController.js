@@ -77,12 +77,22 @@ const authController = {
 
     await Usuario.update({ refreshToken }, { where: { id: usuario.id } });
 
-    // Usar el método helper para configurar cookies
-    res.setCookieSecure("jwt", accessToken, {
+    // Configuración de cookies para HTTPS
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true, // HTTPS habilitado
+      sameSite: "None", // Compatible con HTTPS cross-origin
+      path: "/",
+      domain: undefined // No especificar dominio para mayor compatibilidad
+    };
+
+    res.cookie("jwt", accessToken, {
+      ...cookieOptions,
       maxAge: 3600000 // 1 hora
     });
 
-    res.setCookieSecure("refreshJwt", refreshToken, {
+    res.cookie("refreshJwt", refreshToken, {
+      ...cookieOptions,
       maxAge: 7 * 24 * 3600000 // 7 días
     });
 
@@ -133,8 +143,17 @@ const authController = {
       { expiresIn: "1h" }
     );
 
-    // Usar el método helper para configurar cookies
-    res.setCookieSecure("jwt", newAccessToken, {
+    // Configuración de cookies para HTTP (sin HTTPS)
+    const cookieOptions = {
+      httpOnly: true,
+      secure: false, // HTTP en VPS (no HTTPS)
+      sameSite: "Lax", // Compatible con HTTP
+      path: "/",
+      domain: undefined
+    };
+
+    res.cookie("jwt", newAccessToken, {
+      ...cookieOptions,
       maxAge: 3600000 // 1 hora
     });
 
@@ -154,20 +173,16 @@ const authController = {
 
   async logout(req, res) {
     try {
-      // Limpiar las cookies
-      res.clearCookie("jwt", {
+      // Limpiar las cookies con la misma configuración
+      const cookieOptions = {
         httpOnly: true,
         secure: false,
         sameSite: "Lax",
         path: "/"
-      });
-      
-      res.clearCookie("refreshJwt", {
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        path: "/"
-      });
+      };
+
+      res.clearCookie("jwt", cookieOptions);
+      res.clearCookie("refreshJwt", cookieOptions);
 
       return res.status(200).json({
         data: { message: "Logout exitoso" },

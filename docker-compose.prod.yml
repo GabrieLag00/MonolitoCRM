@@ -1,10 +1,31 @@
 version: "3.8"
 
 services:
+  # Base de datos MySQL
+  efra-mysql:
+    image: gabrielag00/efra-mysql:latest
+    container_name: efra-mysql
+    environment:
+      - MYSQL_DATABASE=contactform
+      - MYSQL_USER=efra_user
+      - MYSQL_PASSWORD=efra_password_123
+      - MYSQL_ROOT_PASSWORD=root_password_123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - mysql_logs:/var/log/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - contact-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "efra_user", "-pefra_password_123"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
   backend:
-    build: 
-      context: ./Contactform
-      target: production  # Modo producción
+    image: gabrielag00/efra-backend:latest
     container_name: contact-backend
     environment:
       - NODE_ENV=production
@@ -12,36 +33,43 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - JWT_SECRET=${JWT_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=efra-mysql
+      - DB_PORT=3306
+      - DB_DATABASE=contactform
+      - DB_USERNAME=efra_user
+      - DB_PASSWORD=efra_password_123
     ports:
-      - "3025:3025"
+      - "3278:3025"
+    depends_on:
+      efra-mysql:
+        condition: service_healthy
     networks:
       - contact-network
     restart: unless-stopped
 
   frontend:
-    build: 
-      context: ./FrontContactForm
-      target: production  # Modo producción con Nginx
+    image: gabrielag00/efra-frontend:latest
     container_name: contact-frontend
     environment:
       - NODE_ENV=production
-      - VITE_URL_API=http://159.203.136.17:3025  # URL de tu VPS
+      - VITE_URL_API=https://3278.efdiaz.xyz  # URL HTTPS
       - VITE_EMAILJS_SERVICE_ID=${VITE_EMAILJS_SERVICE_ID}
       - VITE_EMAILJS_TEMPLATE_ID=${VITE_EMAILJS_TEMPLATE_ID}
       - VITE_EMAILJS_PUBLIC_KEY=${VITE_EMAILJS_PUBLIC_KEY}
       - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
     ports:
-      - "80:80"  # Puerto 80 para acceso web
+      - "3137:80"  # Puerto 3137 para acceso web
     depends_on:
       - backend
     networks:
       - contact-network
     restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+  mysql_logs:
+    driver: local
 
 networks:
   contact-network:
