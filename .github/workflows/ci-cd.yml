@@ -1,205 +1,24 @@
-name: Efra Contact Form CI/CD
+name: Deploy to VPS
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-env:
-  DOCKER_REGISTRY: gabrielag00
+    branches:
+      - main
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.changes.outputs.backend }}
-      frontend: ${{ steps.changes.outputs.frontend }}
-      database: ${{ steps.changes.outputs.database }}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Check for changes
-      uses: dorny/paths-filter@v2
-      id: changes
-      with:
-        filters: |
-          backend:
-            - 'Contactform/**'
-          frontend:
-            - 'FrontContactForm/**'
-          database:
-            - 'database/**'
-
-  build-backend:
-    needs: changes
-    if: ${{ needs.changes.outputs.backend == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build and push Backend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./Contactform
-        file: ./Contactform/Dockerfile
-        push: true
-        tags: |
-          ${{ env.DOCKER_REGISTRY }}/efra-backend:latest
-          ${{ env.DOCKER_REGISTRY }}/efra-backend:${{ github.sha }}
-        platforms: linux/amd64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  build-frontend:
-    needs: changes
-    if: ${{ needs.changes.outputs.frontend == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: './FrontContactForm/package-lock.json'
-
-    - name: Install dependencies and build
-      run: |
-        cd FrontContactForm
-        npm ci
-        npm run build
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build and push Frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: ./FrontContactForm
-        file: ./FrontContactForm/Dockerfile
-        push: true
-        tags: |
-          ${{ env.DOCKER_REGISTRY }}/efra-frontend:latest
-          ${{ env.DOCKER_REGISTRY }}/efra-frontend:${{ github.sha }}
-        platforms: linux/amd64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  build-database:
-    needs: changes
-    if: ${{ needs.changes.outputs.database == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build and push Database
-      uses: docker/build-push-action@v5
-      with:
-        context: ./database
-        file: ./database/Dockerfile
-        push: true
-        tags: |
-          ${{ env.DOCKER_REGISTRY }}/efra-mysql:latest
-          ${{ env.DOCKER_REGISTRY }}/efra-mysql:${{ github.sha }}
-        platforms: linux/amd64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
   deploy:
-    needs: [changes, build-backend, build-frontend, build-database]
-    if: |
-      always() && 
-      github.ref == 'refs/heads/main' && 
-      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
-      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') &&
-      (needs.build-database.result == 'success' || needs.build-database.result == 'skipped')
     runs-on: ubuntu-latest
-    steps:
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd ~/monolitocrm
-          
-          echo "🚀 Iniciando deployment..."
-          
-          # Pull latest images
-          echo "📥 Descargando imágenes actualizadas..."
-          docker-compose -f docker-compose.prod.yml pull
-          
-          # Update containers with zero downtime
-          echo "🔄 Actualizando contenedores..."
-          docker-compose -f docker-compose.prod.yml up -d
-          
-          # Wait for services to be ready
-          echo "⏳ Esperando que los servicios estén listos..."
-          sleep 30
-          
-          # Health checks
-          echo "🔍 Verificando servicios..."
-          if curl -f http://localhost:3137 >/dev/null 2>&1; then
-            echo "✅ Frontend: OK (puerto 3137)"
-          else
-            echo "❌ Frontend: FAIL (puerto 3137)"
-          fi
-          
-          if curl -f http://localhost:3278 >/dev/null 2>&1; then
-            echo "✅ Backend: OK (puerto 3278)"
-          else
-            echo "❌ Backend: FAIL (puerto 3278)"
-          fi
-          
-          # Clean up old images
-          echo "🧹 Limpiando imágenes antiguas..."
-          docker image prune -f
-          
-          # Show final status
-          echo "📊 Estado final de contenedores:"
-          docker-compose -f docker-compose.prod.yml ps
-          
-          echo "🎉 Deployment completado!"
 
-    - name: Deployment Summary
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "🎉 ¡Deployment exitoso!"
-          echo "🌐 Frontend: https://3137.efdiaz.xyz"
-          echo "🔌 Backend: https://3278.efdiaz.xyz"
-          echo "📅 Deployment realizado: $(date)"
-        else
-          echo "❌ Deployment falló. Revisa los logs para más detalles."
-        fi
+    steps:
+      - name: Deploy over SSH using private key
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /root/MonolitoCRM
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
