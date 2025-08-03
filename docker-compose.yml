@@ -3,7 +3,8 @@ version: "3.8"
 services:
   # Base de datos MySQL
   efra-mysql:
-    image: gabrielag00/efra-mysql:latest
+    build:
+      context: ./database
     container_name: efra-mysql
     environment:
       - MYSQL_DATABASE=contactform
@@ -25,7 +26,8 @@ services:
       interval: 30s
 
   backend:
-    image: gabrielag00/efra-backend:latest
+    build:
+      context: ./Contactform
     container_name: contact-backend
     environment:
       - NODE_ENV=production
@@ -48,7 +50,9 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: gabrielag00/efra-frontend:latest
+    build:
+      context: ./FrontContactForm
+      dockerfile: Dockerfile
     container_name: contact-frontend
     environment:
       - NODE_ENV=production
