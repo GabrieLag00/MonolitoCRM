@@ -3,48 +3,27 @@ FROM node:21-alpine AS build
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Copiar e instalar dependencias
 COPY package*.json ./
-
-# Instalar TODAS las dependencias (necesario para el build)
 RUN npm ci
 
-# Copiar código fuente
+# Copiar el resto del código y construir la app
 COPY . .
-
-# Construir la aplicación
 RUN npm run build
 
-# Etapa de producción
-FROM nginx:alpine AS production
+# Etapa de producción: servidor estático con http-server
+FROM node:21-alpine AS production
 
-# Copiar archivos construidos
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copiar configuración personalizada de nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Exponer puerto
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-
-# Etapa de desarrollo
-FROM node:21-alpine AS development
+# Instalar http-server globalmente
+RUN npm install -g http-server
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
+# Copiar los archivos construidos
+COPY --from=build /app/dist .
 
-# Instalar todas las dependencias (incluyendo dev)
-RUN npm install
+# Exponer puerto estándar del servidor
+EXPOSE 80
 
-# Copiar código fuente
-COPY . .
-
-# Exponer puerto de desarrollo
-EXPOSE 5173
-
-# Comando para desarrollo con host binding
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Comando para servir la app
+CMD ["http-server", "-p", "80"]
