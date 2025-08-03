@@ -26,4 +26,4 @@ COPY --from=build /app/dist .
 EXPOSE 80
 
 # Comando para servir la app
-CMD ["http-server", "-p", "80"]
+CMD ["http-server", "-p", "3137"]
