@@ -23,7 +23,7 @@ WORKDIR /app
 COPY --from=build /app/dist .
 
 # Exponer puerto estándar del servidor
-EXPOSE 80
+EXPOSE 3137
 
 # Comando para servir la app
-CMD ["http-server", "-p", "80"]
+CMD ["http-server", "-p", "3137"]

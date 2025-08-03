@@ -62,7 +62,7 @@ services:
       - VITE_EMAILJS_PUBLIC_KEY=${VITE_EMAILJS_PUBLIC_KEY}
       - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
     ports:
-      - "3137:80"  # Puerto 3137 para acceso web
+      - "3137:3137"  # Puerto 3137 para acceso web
     depends_on:
       - backend
     networks:
