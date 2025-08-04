@@ -38,7 +38,7 @@ export default function HomeView() {
 
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-300 hover:text-white transition-colors">
-                Característi
+                Home
               </a>
               <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">
                 Precios
