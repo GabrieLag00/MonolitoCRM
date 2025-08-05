@@ -19,6 +19,7 @@ jobs:
           port: 22
           script: |
             cd /root/MonolitoCRM
+            git config pull.rebase false    # 🔧 Esta línea previene errores de pull
             git pull origin main
             docker-compose down
             docker-compose up -d --build
