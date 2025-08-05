@@ -71,7 +71,7 @@ export default function HomeView() {
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
             Gestión inteligente.
             <br />
-            Resultados extraordinarios okey.
+            Resultados extraordinarios okeyy.
           </h1>
 
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
