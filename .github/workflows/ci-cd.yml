@@ -19,9 +19,6 @@ jobs:
           port: 22
           script: |
             cd /root/MonolitoCRM
-            git config --global user.email "gabo3000lizama@gmail.com"
-            git config --global user.name "GabrieLag00"
-            git config pull.rebase false
             git pull origin main
             docker-compose down
             docker-compose up -d --build
