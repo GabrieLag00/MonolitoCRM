@@ -56,7 +56,7 @@ export default function HomeView() {
                 Iniciar Sesiónnnnn
               </Button>
               <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
-                Prueba Gratis
+                Prueba Gratiss aldair
               </Button>
             </div>
           </div>
