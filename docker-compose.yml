@@ -53,14 +53,13 @@ services:
     build:
       context: ./FrontContactForm
       dockerfile: Dockerfile
+      args:
+        VITE_URL_API: https://3278.efdiaz.xyz
+        VITE_EMAILJS_SERVICE_ID: ${VITE_EMAILJS_SERVICE_ID}
+        VITE_EMAILJS_TEMPLATE_ID: ${VITE_EMAILJS_TEMPLATE_ID}
+        VITE_EMAILJS_PUBLIC_KEY: ${VITE_EMAILJS_PUBLIC_KEY}
+        VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY}
     container_name: contact-frontend
-    environment:
-      - NODE_ENV=production
-      - VITE_URL_API=https://3278.efdiaz.xyz  # URL HTTPS
-      - VITE_EMAILJS_SERVICE_ID=${VITE_EMAILJS_SERVICE_ID}
-      - VITE_EMAILJS_TEMPLATE_ID=${VITE_EMAILJS_TEMPLATE_ID}
-      - VITE_EMAILJS_PUBLIC_KEY=${VITE_EMAILJS_PUBLIC_KEY}
-      - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY}
     ports:
       - "3137:3137"  # Puerto 3137 para acceso web
     depends_on:
