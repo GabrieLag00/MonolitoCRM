@@ -53,7 +53,7 @@ export default function HomeView() {
 
             <div className="flex items-center space-x-4">
               <Button variant="ghost" className="text-gray-300 hover:text-white" onClick={() => navigate("/login")}>
-                Iniciar Sesiónnnn
+                Iniciar Sesiónnnnn
               </Button>
               <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
                 Prueba Gratis
